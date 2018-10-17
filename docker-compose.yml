@@ -2,26 +2,17 @@ version: "3"
 
 services:
 
-  portainer:
-    image: portainer/portainer
-    ports:
-      - 9000:9000
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_volume:/data
-    networks:
-      - frontend
-
   ldap:
-    image: monsoon/ldap:0.0.1
+    build: ./ldap
+    image: monsoon/ldap
     container_name: monsoon_ldap
     restart: always
     ports:
       - 389:389
     environment:
-      - LDAP_ADMIN_PASSWORD=monsoon
-      - LDAP_ORGANISATION=Monsoon consortium
-      - LDAP_DOMAIN=monsoon.eu
+      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD}
+      - LDAP_ORGANISATION=${LDAP_ORGANISATION}
+      - LDAP_DOMAIN=${LDAP_DOMAIN}
     healthcheck:
       test: ["CMD-SHELL", "/healthcheck.sh"]
       interval: 30s
@@ -33,19 +24,9 @@ services:
     networks:
       - frontend
 
-  ldapadmin:
-    image: osixia/phpldapadmin
-    container_name: monsoon_ldapadmin
-    restart: always
-    environment:
-      - PHPLDAPADMIN_LDAP_HOSTS=ldap
-    ports:
-      - 9443:443
-    networks:
-      - frontend
-
   nifi:
-    image: monsoon/nifi:0.0.1
+    build: ./ldap
+    image: monsoon/nifi
     container_name: monsoon_nifi
     restart: always
     ports:
@@ -58,11 +39,11 @@ services:
       - TRUSTSTORE_PATH=/opt/secrets/truststore.jks
       - TRUSTSTORE_PASSWORD=monsoon
       - TRUSTSTORE_TYPE=JKS
-      - INITIAL_ADMIN_IDENTITY=uid=admin,ou=people,dc=monsoon,dc=eu
+      - INITIAL_ADMIN_IDENTITY=${NIFI_INITIAL_ADMIN_IDENTITY}
       - LDAP_AUTHENTICATION_STRATEGY=SIMPLE
-      - LDAP_MANAGER_DN=cn=admin,dc=monsoon,dc=eu
-      - LDAP_MANAGER_PASSWORD=monsoon
-      - LDAP_USER_SEARCH_BASE=ou=people,dc=monsoon,dc=eu
+      - LDAP_MANAGER_DN=${NIFI_LDAP_MANAGER_DN}
+      - LDAP_MANAGER_PASSWORD=${NIFI_LDAP_MANAGER_PASSWORD}
+      - LDAP_USER_SEARCH_BASE=${NIFI_LDAP_USER_SEARCH_BASE}
       - LDAP_USER_SEARCH_FILTER=uid={0}
       - LDAP_IDENTITY_STRATEGY=USE_DN
       - LDAP_URL=ldap://ldap:389
@@ -70,9 +51,6 @@ services:
       - NIFI_WEB_HTTP_HOST=ucc-ipc-0
       - NIFI_REMOTE_INPUT_HOST=ucc-ipc-0
     volumes:
-      - ./nifi/secrets:/opt/secrets
-      - ./data:/data
-      - ./nifi/conf/templates:/opt/nifi/nifi-1.6.0/conf/templates
       - nifi_conf_volume:/opt/nifi/nifi-1.6.0/conf
       - nifi_logs_volume:/opt/nifi/nifi-1.6.0/logs
       - nifi_database_volume:/opt/nifi/nifi-1.6.0/database_repository
@@ -83,23 +61,14 @@ services:
       - frontend
 
 volumes:
-  portainer_volume:
-    driver: local
   ldap_volume:
-    driver: local
   ldap_conf_volume:
   nifi_conf_volume:
-    driver: local
   nifi_logs_volume:
-    driver: local
   nifi_database_volume:
-    driver: local
   nifi_flowfile_volume:
-    driver: local
   nifi_content_volume:
-    driver: local
   nifi_provenance_volume:
-    driver: local
  
 networks:
   frontend:
