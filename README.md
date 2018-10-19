@@ -3,18 +3,7 @@
 This repository contains setup configuration for running a secure Nifi instance which authenticates users using LDAP.
 
 ## Quick Start
-Before getting started, you may want to set this script, as well as all scripts inside `utils/` to executable first:
-```
-chmod 755 ./start.sh
-chmod 755 ./scripts/*.sh
-```
-
-Run the setup script from the repo root directory. You can configure some parameters inside this script:
-```bash
-./scripts/start.sh
-```
-
-After this, you can run the starting script to launch the stack:
+Run the starting script to launch the stack:
 ```bash
 ./start.sh
 ```

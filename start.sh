@@ -6,10 +6,7 @@ if [ ! -f ./nifi/secrets/keystore.jks -o ! -f ./nifi/secrets/truststore.jks ]; t
     exit 1
 fi
 
-if [ ! -f ./.env ]; then
-    echo "[ERROR] .env file is missing. Please run ./scripts/setup.sh first"
-    echo "Launching aborted"
-    exit 1
-fi
+# Run the setup script
+./scripts/setup.sh
 
 docker-compose up

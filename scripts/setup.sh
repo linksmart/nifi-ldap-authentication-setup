@@ -1,11 +1,5 @@
 #!/bin/bash
 
-if [ ! -f ./nifi/secrets/keystore.jks -o ! -f ./nifi/secrets/truststore.jks ]; then
-    echo "[ERROR] keystore.jks or truststore.jks is missing in ./nifi/secrets"
-    echo "Launching aborted"
-    exit 1
-fi
-
 #-------------------------------------------
 # Basic configuration for the LDAP root DN
 #-------------------------------------------
