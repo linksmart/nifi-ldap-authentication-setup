@@ -25,7 +25,8 @@ NIFI_ADMIN_PASSWORD=fit
 # Nifi keystore/truststore password
 # The password to the keystore.jks and truststore.jks
 #-------------------------------------------
-NIFI_STORE_PASS=fraunhofer
+NIFI_KEYSTORE_PASS=fraunhofer
+NIFI_TRUSTSTORE_PASS=fraunhofer
 
 #-------------------------------------------
 # LDAP Variables
@@ -103,7 +104,8 @@ NIFI_INITIAL_ADMIN_IDENTITY=${NIFI_INITIAL_ADMIN_IDENTITY}
 NIFI_LDAP_MANAGER_DN=${NIFI_LDAP_MANAGER_DN}
 NIFI_LDAP_MANAGER_PASSWORD=${NIFI_LDAP_MANAGER_PASSWORD}
 NIFI_LDAP_USER_SEARCH_BASE=${NIFI_LDAP_USER_SEARCH_BASE}
-NIFI_STORE_PASS=${NIFI_STORE_PASS}
+NIFI_KEYSTORE_PASS=${NIFI_KEYSTORE_PASS}
+NIFI_TRUSTSTORE_PASS=${NIFI_TRUSTSTORE_PASS}
 NIFI_HOST=${NIFI_HOST}
 NIFI_PORT=${NIFI_PORT}
 
@@ -112,10 +114,50 @@ LDAP_ORGANISATION=${LDAP_ORGANISATION}
 LDAP_DOMAIN=${LDAP_DOMAIN}
 EOF
 
-if [ ! -f ./nifi/secrets/keystore.jks -o ! -f ./nifi/secrets/truststore.jks ]; then
-    echo "[ERROR] keystore.jks or truststore.jks is missing in ./nifi/secrets"
-    echo "Launching aborted"
-    exit 1
+if [ ! -f ./nifi/secrets/keystore.jks ]; then
+    echo "keystore.jks does not exist. Do you want to generate a new keystore with self-signed certificate?"
+    select yn in "Yes" "No"; do
+        case ${yn} in
+            Yes )
+                read -p "Please enter the subject of cert. It typically has the form \"CN=hostname,O=Fraunhofer FIT,C=DE\":" SERVER_CERT_SUBJECT
+                read -p "Please enter the password for the keystore: " NIFI_KEYSTORE_PASS
+                echo " "
+                echo "truststore.jks does not exist either. Do you want to generate a dummy truststore (only trusting its own certificate)?"
+                select yn in "Yes" "No"; do
+                    case ${yn} in
+                        Yes )
+                            GEN_TRUSTSTORE=true
+                            ;;
+                        No )
+                            echo " "
+                            echo "truststore.jks does not exist. Please provides your keystore in ./secrets, or use the provided script to generate a new one"
+                            echo "[ERROR] No truststore.jks found. Launching aborted!"
+                            echo " "
+                            exit 1
+                            ;;
+                    esac
+                done
+                echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                echo "Generating keystore containing cert with subject field: "
+                echo "  ${SERVER_CERT_SUBJECT}"
+                echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
+                    -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
+                    /usr/src/secrets/generate-keystore.sh \
+                    "${SERVER_CERT_SUBJECT}" "${NIFI_TRUSTSTORE_PASS}" "${GEN_TRUSTSTORE}"
+                echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                echo "Keystore generation done!"
+                echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                ;;
+            No )
+                echo " "
+                echo "keystore.jks does not exist. Please provides your keystore in ./secrets, or use the provided script to generate a new one"
+                echo "[ERROR] No keystore.jks found. Launching aborted!"
+                echo " "
+                exit 1
+                ;;
+        esac
+    done
 fi
 
 docker-compose up
