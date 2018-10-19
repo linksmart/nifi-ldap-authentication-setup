@@ -24,7 +24,7 @@ After logging in, you'll find most things greyed out. You need to change the pol
 3. This repository also comes with some scripts to help you set up your keystore and truststore. To generate a new keystore with self-signed certificate and trust that certificate, run this command:
     ```bash
     docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
-        -w /usr/src/secrets openjdk:8-alpine \
+        -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
         /usr/src/secrets/generate-certificates.sh \
         [DN of certificate] [store password]
     ```
@@ -37,7 +37,7 @@ After logging in, you'll find most things greyed out. You need to change the pol
 4. If you already have a private key and a certificate (or a chain of certificates), save them as `nifi.key` and `nifi.cert` in `./nifi/secrets`, run the following command:
     ```bash
     docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
-        -w /usr/src/secrets openjdk:8-alpine \
+        -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
         /usr/src/secrets/import-certificates.sh \
         [store password]
     ```

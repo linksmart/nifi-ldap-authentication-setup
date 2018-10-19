@@ -25,7 +25,7 @@ NIFI_ADMIN_PASSWORD=fit
 # Nifi keystore/truststore password
 # The password to the keystore.jks and truststore.jks
 #-------------------------------------------
-NIFI_STORE_PASS=monsoon
+NIFI_STORE_PASS=fraunhofer
 
 #-------------------------------------------
 # LDAP Variables
