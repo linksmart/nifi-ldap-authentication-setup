@@ -32,7 +32,7 @@ After logging in, you'll find most things greyed out. You need to change the pol
     ```
     CN=fit.fraunhofer.de,OU=people,O=Fraunhofer FIT,L=Sankt Augustin,ST=Nordrhein Westfalen,C=DE
     ```
-    `store password` is the password to both stores.
+    `store password` is the password to both stores. Remember to rebuild Nifi image and set the `NIFI_STORE_PASS` in `./scripts/setup.sh`
 
 4. If you already have a private key and a certificate (or a chain of certificates), save them as `nifi.key` and `nifi.cert` in `./nifi/secrets`, run the following command:
     ```bash
