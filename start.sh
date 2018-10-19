@@ -64,6 +64,8 @@ export NIFI_LDAP_MANAGER_DN="cn=admin,$BASE_DN"
 export NIFI_LDAP_MANAGER_PASSWORD=${LDAP_ADMIN_PASSWORD}
 export NIFI_LDAP_USER_SEARCH_BASE="$OU_DN"
 export NIFI_STORE_PASS
+export NIFI_HOST
+export NIFI_PORT
 
 # Export LDAP env variables to docker-compose
 export LDAP_ADMIN_PASSWORD

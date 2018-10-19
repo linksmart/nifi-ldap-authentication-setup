@@ -39,6 +39,15 @@ After logging in, you'll find most things greyed out. You need to change the pol
     CN=fit.fraunhofer.de,OU=people,O=Fraunhofer FIT,L=Sankt Augustin,ST=Nordrhein Westfalen,C=DE
     ```
     `store password` is the password to both stores.
+
+4. If you already have a private key and a certificate (or a chain of certificates), save them as `nifi.key` and `nifi.cert` in `./nifi/secrets`, run the following command:
+    ```bash
+    docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
+        -w /usr/src/secrets openjdk:8-alpine \
+        /usr/src/secrets/import-certificates.sh \
+        [store password]
+    ```
+    This will generate the `keystore.jks` from your certificate and private key.
 ## Notes
 Here is something I learned, which is not clearly documented in official documents:  
 

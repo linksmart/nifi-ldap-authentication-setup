@@ -55,4 +55,4 @@ services:
       - nifi
  
 networks:
-  frontend:
+  nifi:
