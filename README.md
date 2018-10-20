@@ -3,7 +3,7 @@
 This repository contains setup configuration for running a secure Nifi instance which authenticates users using LDAP.
 
 ## Quick Start
-Run the starting script to launch the stack:
+Run the setup script to generate necessary configurations:
 ```bash
 ./setup.sh
 ```
