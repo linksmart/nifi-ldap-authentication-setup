@@ -4,8 +4,8 @@ services:
 
   ldap:
     build: ./ldap
-    image: ${DOMAIN}/ldap
-    container_name: ${DOMAIN}-ldap
+    image: ${DOCKER_NAMESPACE}/ldap
+    container_name: ${DOCKER_NAMESPACE}-ldap
     restart: always
     environment:
       - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD}
@@ -16,7 +16,7 @@ services:
 
 #  ldapadmin:
 #    image: osixia/phpldapadmin
-#    container_name: ${DOMAIN}-ldapadmin
+#    container_name: ${DOCKER_NAMESPACE}-ldapadmin
 #    restart: always
 #    environment:
 #    - PHPLDAPADMIN_LDAP_HOSTS=ldap
@@ -27,8 +27,8 @@ services:
 
   nifi:
     build: ./nifi
-    image: ${DOMAIN}/nifi
-    container_name: ${DOMAIN}-nifi
+    image: ${DOCKER_NAMESPACE}/nifi
+    container_name: ${DOCKER_NAMESPACE}-nifi
     restart: always
     ports:
       - ${NIFI_PORT}:8443

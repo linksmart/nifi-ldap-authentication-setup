@@ -5,12 +5,17 @@ This repository contains setup configuration for running a secure Nifi instance 
 ## Quick Start
 Run the starting script to launch the stack:
 ```bash
-./start.sh
+./setup.sh
 ```
 
-Now a secure Nifi instance has been started and you can visit it here (the port could be different depending on your configuration in the starting script). Log in with the credential you set in the starting script (`NIFI_ADMIN_UID` and `NIFI_ADMIN_PASSWORD`):
+The script will set up necessary files for you. After it finishes, you can run the following to bring up the stack:
+```bash
+docker-compose up
 ```
-https://localhost:5443
+
+Now a secure Nifi instance has been started and you can visit it here (the `port` depends on your configuration in the setup script). Log in with the credential you set in the starting script (`NIFI_ADMIN_UID` and `NIFI_ADMIN_PASSWORD`):
+```
+https://localhost:[port]/nifi
 ```
 
 After logging in, you'll find most things greyed out. You need to change the policies to grant the current user more access. Since you are using the initial admin account, you have all the permission to add policies or new users.

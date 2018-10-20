@@ -6,6 +6,9 @@
 DOMAIN_COMPONENTS=("fit" "fraunhofer" "de")
 OU=people
 ORGANISATION="Fraunhofer FIT"
+# This variable will be used to construct part of the image name and container name,
+# e.g. ${DOCKER_NAMESPACE}/nifi as image name, and ${DOCKER_NAMESPACE}-nifi as container name
+DOCKER_NAMESPACE="fit"
 
 #-------------------------------------------
 # The hostname of the container host machine and the forwarded port to Nifi web interface
@@ -42,6 +45,10 @@ echo "==========================="
 echo "Starting Nifi - LDAP stack"
 echo "==========================="
 
+# Remove old generated files
+rm -f ./ldap/secrets/users.ldif
+rm -f ./.env
+
 # Basic DN calculation
 for DC in "${DOMAIN_COMPONENTS[@]}"; do
    if [ ! -z $DOMAIN ]; then
@@ -64,13 +71,53 @@ NIFI_LDAP_USER_SEARCH_BASE="$OU_DN"
 LDAP_ORGANISATION=${ORGANISATION}
 LDAP_DOMAIN=${DOMAIN}
 
-echo Nifi initial admin identity: ${NIFI_INITIAL_ADMIN_IDENTITY}
-echo Nifi LDAP manager: ${NIFI_LDAP_MANAGER_DN}
-echo Nifi LDAP search base: ${NIFI_LDAP_USER_SEARCH_BASE}
-
-# Remove old generated files
-rm -f ./ldap/secrets/users.ldif
-rm -f ./.env
+if [ ! -f ./nifi/secrets/keystore.jks ]; then
+    echo "keystore.jks does not exist. Do you want to generate a new keystore with self-signed certificate?"
+    select yn in "Yes" "No"; do
+        case ${yn} in
+            Yes )
+                read -p "Please enter the subject of cert. It typically has the form \"CN=hostname,O=Fraunhofer FIT,C=DE\":" SERVER_CERT_SUBJECT
+                read -s "Please enter the password for the keystore: " NIFI_KEYSTORE_PASS
+                echo " "
+                echo "truststore.jks does not exist either. Do you want to generate a dummy truststore (only trusting its own certificate)?"
+                select yn in "Yes" "No"; do
+                    case ${yn} in
+                        Yes )
+                            GEN_TRUSTSTORE=true
+                            break
+                            ;;
+                        No )
+                            echo " "
+                            echo "truststore.jks does not exist. Please provides your keystore in ./secrets, or use the provided script to generate a new one"
+                            echo "[ERROR] No truststore.jks found. Launching aborted!"
+                            echo " "
+                            exit 1
+                            ;;
+                    esac
+                done
+                echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                echo "Generating keystore containing cert with subject field: "
+                echo "  ${SERVER_CERT_SUBJECT}"
+                echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
+                    -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
+                    /usr/src/secrets/generate-keystore.sh \
+                    "${SERVER_CERT_SUBJECT}" "${NIFI_TRUSTSTORE_PASS}" "${GEN_TRUSTSTORE}"
+                echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                echo "Keystore generation done!"
+                echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                break
+                ;;
+            No )
+                echo " "
+                echo "keystore.jks does not exist. Please provides your keystore in ./secrets, or use the provided script to generate a new one"
+                echo "[ERROR] No keystore.jks found. Launching aborted!"
+                echo " "
+                exit 1
+                ;;
+        esac
+    done
+fi
 
 # Generate bootstrap ldif file, which contains the initial Nifi admin credential
 # This file will be read in by the OpenLDAP server during start up, creating a single user entry in the LDAP database
@@ -98,7 +145,7 @@ EOF
 
 # Generate .env file for docker-compose
 cat  << EOF > ./.env
-DOMAIN=${DOMAIN}
+DOCKER_NAMESPACE=${DOCKER_NAMESPACE}
 
 NIFI_INITIAL_ADMIN_IDENTITY=${NIFI_INITIAL_ADMIN_IDENTITY}
 NIFI_LDAP_MANAGER_DN=${NIFI_LDAP_MANAGER_DN}
@@ -114,50 +161,16 @@ LDAP_ORGANISATION=${LDAP_ORGANISATION}
 LDAP_DOMAIN=${LDAP_DOMAIN}
 EOF
 
-if [ ! -f ./nifi/secrets/keystore.jks ]; then
-    echo "keystore.jks does not exist. Do you want to generate a new keystore with self-signed certificate?"
-    select yn in "Yes" "No"; do
-        case ${yn} in
-            Yes )
-                read -p "Please enter the subject of cert. It typically has the form \"CN=hostname,O=Fraunhofer FIT,C=DE\":" SERVER_CERT_SUBJECT
-                read -p "Please enter the password for the keystore: " NIFI_KEYSTORE_PASS
-                echo " "
-                echo "truststore.jks does not exist either. Do you want to generate a dummy truststore (only trusting its own certificate)?"
-                select yn in "Yes" "No"; do
-                    case ${yn} in
-                        Yes )
-                            GEN_TRUSTSTORE=true
-                            ;;
-                        No )
-                            echo " "
-                            echo "truststore.jks does not exist. Please provides your keystore in ./secrets, or use the provided script to generate a new one"
-                            echo "[ERROR] No truststore.jks found. Launching aborted!"
-                            echo " "
-                            exit 1
-                            ;;
-                    esac
-                done
-                echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-                echo "Generating keystore containing cert with subject field: "
-                echo "  ${SERVER_CERT_SUBJECT}"
-                echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-                docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
-                    -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
-                    /usr/src/secrets/generate-keystore.sh \
-                    "${SERVER_CERT_SUBJECT}" "${NIFI_TRUSTSTORE_PASS}" "${GEN_TRUSTSTORE}"
-                echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-                echo "Keystore generation done!"
-                echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-                ;;
-            No )
-                echo " "
-                echo "keystore.jks does not exist. Please provides your keystore in ./secrets, or use the provided script to generate a new one"
-                echo "[ERROR] No keystore.jks found. Launching aborted!"
-                echo " "
-                exit 1
-                ;;
-        esac
-    done
-fi
+echo Nifi initial admin identity: ${NIFI_INITIAL_ADMIN_IDENTITY}
+echo Nifi LDAP manager: ${NIFI_LDAP_MANAGER_DN}
+echo Nifi LDAP search base: ${NIFI_LDAP_USER_SEARCH_BASE}
 
-docker-compose up
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+echo "Setup finished!"
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+echo "To start the stack, simply run:"
+echo " "
+echo "  docker-compose up"
+echo " "
+echo "Happy coding!"
