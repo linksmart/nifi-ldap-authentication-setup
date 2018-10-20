@@ -8,27 +8,38 @@ Run the setup script to generate necessary configurations:
 ./setup.sh
 ```
 
-The script will set up necessary files for you. After it finishes, you can run the following to bring up the stack:
+The script will will do the following for you:  
+- If no `keystore.jks` exists inside `./nifi/secrets`, it will prompt you to generate one with self-signed certificate;
+- If no `truststore.jks` exists inside `./nifi/secrets`, it will prompt you to generate a dummy truststore;
+- It will generate a `users.ldif` file inside `./ldap/secrets`, which provides the initial Nifi admin identity to the LDAP server;
+- It will generate a `.env` file in repository root directory with all properly set environment variables. It will be used by docker-compose.
+ 
+After it finishes, you can run the following to bring up the stack:
 ```bash
 docker-compose up
 ```
 
-Now a secure Nifi instance has been started and you can visit it here (the `port` depends on your configuration in the setup script). Log in with the credential you set in the starting script (`NIFI_ADMIN_UID` and `NIFI_ADMIN_PASSWORD`):
+Now a secure Nifi instance has been started and you can visit it here (the `port` depends on your configuration in the setup script). Log in with the credential you set in the setup script (`NIFI_ADMIN_UID` and `NIFI_ADMIN_PASSWORD`):
 ```
-https://localhost:[port]/nifi
+https://[hostname]:[port]/nifi
 ```
 
 After logging in, you'll find most things greyed out. You need to change the policies to grant the current user more access. Since you are using the initial admin account, you have all the permission to add policies or new users.
 
 
 ## Advanced
+
+#### Putting Files into Nifi
 1. If you have NAR files to add to the Nifi library, simply put them into `./nifi/nars`, they'll be copied into the newly built image in build time.  
 
 2. If you have configurations files to add to the Nifi instance, simply put them into `./nifi/conf`. Typically, you can put in the following files:
     - `flow.xml.gz`: this file contains the current processor setup on the Nifi canvas
     - `./templates/*.xml`: template files   
     
-3. If you already have a private key and a certificate (or a chain of certificates), put them in `./nifi/secrets`, run the following command:
+#### Security
+1. You can provide your own keystore and truststore. Just name them `keystore.jks` and `truststore.jks` respectively and put them into `./nifi/screts`. Then follow the quick start instruction.
+
+2. If you already have a private key and a certificate (or a chain of certificates), put them in `./nifi/secrets`, run the following command:
     ```bash
     docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
         -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
