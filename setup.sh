@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 #-------------------------------------------
 # Basic configuration for the LDAP root DN
@@ -72,18 +72,22 @@ LDAP_ORGANISATION=${ORGANISATION}
 LDAP_DOMAIN=${DOMAIN}
 
 if [ ! -f ./nifi/secrets/keystore.jks ]; then
-    echo "keystore.jks does not exist. Do you want to generate a new keystore with self-signed certificate?"
+    echo "keystore.jks does not exist. Do you want to generate a new keystore with self-signed certificate? (Type in the number before option to choose):"
     select yn in "Yes" "No"; do
         case ${yn} in
             Yes )
                 read -p "Please enter the subject of cert. It typically has the form \"CN=hostname,O=Fraunhofer FIT,C=DE\":" SERVER_CERT_SUBJECT
-                read -s "Please enter the password for the keystore: " NIFI_KEYSTORE_PASS
+                echo -n "Please enter the password for the keystore: " 
+                read -s NIFI_KEYSTORE_PASS
                 echo " "
                 echo "truststore.jks does not exist either. Do you want to generate a dummy truststore (only trusting its own certificate)?"
                 select yn in "Yes" "No"; do
                     case ${yn} in
                         Yes )
                             GEN_TRUSTSTORE=true
+                            echo -n "Please enter the password for the truststore: " 
+                            read -s NIFI_TRUSTSTORE_PASS
+                            echo " "
                             break
                             ;;
                         No )
@@ -102,7 +106,7 @@ if [ ! -f ./nifi/secrets/keystore.jks ]; then
                 docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
                     -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
                     /usr/src/secrets/generate-keystore.sh \
-                    "${SERVER_CERT_SUBJECT}" "${NIFI_TRUSTSTORE_PASS}" "${GEN_TRUSTSTORE}"
+                    "${SERVER_CERT_SUBJECT}" "${NIFI_KEYSTORE_PASS}" "${NIFI_TRUSTSTORE_PASS}" "${GEN_TRUSTSTORE}"
                 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
                 echo "Keystore generation done!"
                 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
@@ -174,3 +178,5 @@ echo " "
 echo "  docker-compose up"
 echo " "
 echo "Happy coding!"
+echo " "
+echo " "
