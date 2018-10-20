@@ -22,29 +22,18 @@ After logging in, you'll find most things greyed out. You need to change the pol
 
 
 ## Advanced
-1. If you have NAR files to add to the Nifi library, simply put them into `./nifi/nars`, they'll be copied into the newly built image in start-up.
+1. If you have NAR files to add to the Nifi library, simply put them into `./nifi/nars`, they'll be copied into the newly built image in build time.  
+
 2. If you have configurations files to add to the Nifi instance, simply put them into `./nifi/conf`. Typically, you can put in the following files:
     - `flow.xml.gz`: this file contains the current processor setup on the Nifi canvas
-    - `./templates/*.xml`: template files 
-3. This repository also comes with some scripts to help you set up your keystore and truststore. To generate a new keystore with self-signed certificate and trust that certificate, run this command:
-    ```bash
-    docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
-        -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
-        /usr/src/secrets/generate-certificates.sh \
-        [DN of certificate] [store password]
-    ```
-    where `DN of certificate` typically has the following form:
-    ```
-    CN=fit.fraunhofer.de,OU=people,O=Fraunhofer FIT,L=Sankt Augustin,ST=Nordrhein Westfalen,C=DE
-    ```
-    `store password` is the password to both stores. Remember to rebuild Nifi image and set the `NIFI_STORE_PASS` in `./scripts/setup.sh`
-
-4. If you already have a private key and a certificate (or a chain of certificates), save them as `nifi.key` and `nifi.cert` in `./nifi/secrets`, run the following command:
+    - `./templates/*.xml`: template files   
+    
+3. If you already have a private key and a certificate (or a chain of certificates), put them in `./nifi/secrets`, run the following command:
     ```bash
     docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
         -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
         /usr/src/secrets/import-certificates.sh \
-        [store password]
+        [key file name] [cert file name] [store password]
     ```
     This will generate the `keystore.jks` from your certificate and private key.
 ## Notes
