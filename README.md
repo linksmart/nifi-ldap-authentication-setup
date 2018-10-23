@@ -13,13 +13,23 @@ The script will will do the following for you:
 - If no `truststore.jks` exists inside `./nifi/secrets`, it will prompt you to generate a dummy truststore;
 - It will generate a `users.ldif` file inside `./ldap/secrets`, which provides the initial Nifi admin identity to the LDAP server;
 - It will generate a `.env` file in repository root directory with all properly set environment variables. It will be used by docker-compose.
- 
-After it finishes, you can run the following to bring up the stack:
+
+After it finishes, you can need to build the images:
 ```bash
-docker-compose up
+docker-compose -p example_project build --no-cache --force-rm
 ```
 
+Bring up the stack:
+```bash
+docker-compose -p example_project  up --detach --force-recreate
+```
+
+Now a secure Nifi instance has been started and you can visit it here (the `port` depends on your configuration in the setup script). Log in with the credential you specified in the setup script:
+```
+https://[hostname]:[port]/nifi
+```
 Now a secure Nifi instance has been started and you can visit it here (the `port` depends on your configuration in the setup script). Log in with the credential you set in the setup script (`NIFI_ADMIN_UID` and `NIFI_ADMIN_PASSWORD`):
+
 ```
 https://[hostname]:[port]/nifi
 ```
@@ -39,7 +49,11 @@ After logging in, you'll find most things greyed out. You need to change the pol
 #### Security
 1. You can provide your own keystore and truststore. Just name them `keystore.jks` and `truststore.jks` respectively and put them into `./nifi/screts`. Then follow the quick start instruction.
 
-2. If you already have a private key and a certificate (or a chain of certificates), put them in `./nifi/secrets`, run the following command:
+
+2. If a new `keystore.jks` is generated, a matching truststore `external_truststore.jks` would also be generated. This truststore is intended to be used in another Nifi instance to communicate securely with the one you are launching.  
+
+
+3. If you already have a private key and a certificate (or a chain of certificates), put them in `./nifi/secrets`, run the following command:
     ```bash
     docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
         -w /usr/src/secrets --user ${UID} openjdk:8-alpine \

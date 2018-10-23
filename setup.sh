@@ -59,43 +59,28 @@ NIFI_LDAP_USER_SEARCH_BASE="$OU_DN"
 LDAP_ORGANISATION=${ORGANISATION}
 LDAP_DOMAIN=${DOMAIN}
 
-if [ ! -f ./nifi/secrets/keystore.jks ]; then
-    echo "keystore.jks does not exist. Generating a new keystore."
-    read -p "Please enter the subject of cert. It typically has the form \"CN=[hostname],OU=nifi\":" SERVER_CERT_SUBJECT
-    NIFI_KEYSTORE_PASS=$(gen_pass)
-    echo $NIFI_KEYSTORE_PASS
-    echo " "
-    echo "---------------------------------------------"
-    echo "Generating certificate with subject field: ${SERVER_CERT_SUBJECT}"
-    echo "---------------------------------------------"
-    docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
-        -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
-        /usr/src/secrets/generate-keystore.sh \
-        "${SERVER_CERT_SUBJECT}" "${NIFI_KEYSTORE_PASS}"
-    echo "---------------------------------------------"
-    echo "Keystore generation finished!"
-    echo "---------------------------------------------"
-else
-    echo -n "keystore.jks detected. Please provide the password for the the keystore:"
+if [ -f ./nifi/secrets/keystore.jks ]; then
+    echo -n "keystore.jks detected. Please provide the password for the the keystore: "
     read -s NIFI_KEYSTORE_PASS
     echo " "
+else
+    NIFI_KEYSTORE_PASS=$(gen_pass)
 fi
 
-if [ ! -f ./nifi/secrets/truststore.jks ]; then
-    echo "truststore.jks does not exist. Generating a dummy truststore.jks"
-    NIFI_TRUSTSTORE_PASS=$(gen_pass)
-    docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
-        -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
-        /usr/src/secrets/generate-truststore.sh \
-        "${NIFI_KEYSTORE_PASS}" "${NIFI_TRUSTSTORE_PASS}"
-    echo "---------------------------------------------"
-    echo "Truststore generation finished!"
-    echo "---------------------------------------------"
-else
+if [ -f ./nifi/secrets/truststore.jks ]; then
     echo -n "truststore.jks detected. Please provide the password for the the truststore: "
     read -s NIFI_TRUSTSTORE_PASS
     echo " "
+else
+    NIFI_TRUSTSTORE_PASS=$(gen_pass)
 fi
+
+# Run the script to generate keystore/truststore, if they don't exist
+docker run -it --rm -v "$PWD/secrets":/usr/src/secrets \
+        -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
+        /usr/src/secrets/generate.sh \
+        "${NIFI_KEYSTORE_PASS}" "${NIFI_TRUSTSTORE_PASS}"
+
 
 
 # Generate bootstrap ldif file, which contains the initial Nifi admin credential
