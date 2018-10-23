@@ -76,7 +76,7 @@ else
 fi
 
 # Run the script to generate keystore/truststore, if they don't exist
-docker run -it --rm -v "$PWD/secrets":/usr/src/secrets \
+docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
         -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
         /usr/src/secrets/generate.sh \
         "${NIFI_KEYSTORE_PASS}" "${NIFI_TRUSTSTORE_PASS}"
@@ -133,25 +133,19 @@ echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 echo "Setup finished!"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
-echo "To start the stack, simply run:"
+echo "To run the stack, first you need to build the image:"
 echo " "
-echo "  docker-compose up"
+echo "   docker-compose -p example_project build --no-cache --force-rm"
 echo " "
-echo "Docker will build two images with the following two names:"
+echo "Bring up the stack:"
 echo " "
-echo "  ${DOCKER_NAMESPACE}/nifi ${DOCKER_NAMESPACE}/ldap"
+echo "   docker-compose -p example_project up -d --force-recreate"
 echo " "
-echo "You need to make sure there are no existing images with these names, otherwise they won't be built."
+echo "If everything goes well, you can visit Nifi under this URL:"
 echo " "
-echo "Docker-compose will spin up two containers with the following names:"
+echo "   https://${NIFI_HOST}:${NIFI_PORT}"
 echo " "
-echo "  ${DOCKER_NAMESPACE}-nifi ${DOCKER_NAMESPACE}-ldap"
-echo " "
-echo "You need to make sure no existing container with these names. If everything goes well, you can visit Nifi under this URL:"
-echo " "
-echo "  https://${NIFI_HOST}:${NIFI_PORT}"
-echo " "
-echo "Log in with the username ${NIFI_ADMIN_UID} and the password you set earlier."
+echo "Log in with the username /"${NIFI_ADMIN_UID}/" and the password you set earlier."
 echo " "
 echo "Happy flowing!"
 echo " "

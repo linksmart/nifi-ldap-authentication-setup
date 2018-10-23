@@ -20,11 +20,12 @@ if [ ! -f ./secrets/keystore.jks ]; then
 
     # If no truststore.jks detected, generate a dummy one
     if [ ! -f ./secrets/truststore.jks ]; then
-        keytool -import -file external.der -alias nifi -keystore external_truststore.jks -storepass "${TRUSTSTORE_PSWD}" -noprompt
+        keytool -import -file external.der -alias nifi -keystore truststore.jks -storepass "${TRUSTSTORE_PSWD}" -noprompt
     fi
 
     echo -n "Generating a truststore for EXTERNAL usage from this keystore. Please provide password for this truststore: "
     read -s EXTERNAL_TRUSTSTORE_PSWD
+    echo " "
     keytool -import -file external.der -alias nifi -keystore external_truststore.jks -storepass "${EXTERNAL_TRUSTSTORE_PSWD}" -noprompt
 
     # Clean up
