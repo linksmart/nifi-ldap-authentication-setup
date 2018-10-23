@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Nifi LDAP Auth Setup.iml" filepath="$PROJECT_DIR$/.idea/Nifi LDAP Auth Setup.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/nifi-ldap-authentication-setup.iml" filepath="$PROJECT_DIR$/.idea/nifi-ldap-authentication-setup.iml" />
     </modules>
   </component>
 </project>
