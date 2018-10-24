@@ -1,9 +1,12 @@
 #!/bin/bash -e
-echo " -------------------------------"
-echo "|                               |"
-echo "|       Nifi - LDAP Stack       |"
-echo "|                               |"
-echo " -------------------------------"
+
+cat << EOF
+     -------------------------------
+    |                               |
+    |       Nifi - LDAP Stack       |
+    |                               |
+     -------------------------------
+EOF
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
@@ -100,18 +103,18 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 print_help(){
 
-    echo << EOF
+    cat << EOF
 
     This script generate appropriate configuration and keystore/truststore for a secure Nifi instance.
 
-    USAGE: ./setup.sh [OPTIONS]
+    USAGE: ./setup.sh [OPTIONS] [ARGUMENTS]
 
-    Example: ./setup.sh -n host-01 -p 8443 -s "CN=host-01,OU=nifi"
+    Example: ./setup.sh -n host-01 -p 8443 --nifi-user admin --nifi-pass fraunhofer -s "CN=host-01,OU=nifi" --new-keystore --new-truststore
 
     OPTIONS:
 
 EOF
-    echo << EOF | column -s"|" -t
+    cat << EOF | column -s"|" -t
     -h, --help:|Show the help message.
     -n, --hostname HOSTNAME:|Required. The hostname of machine hosting the Nifi container.
     -p, --port PORT:|Required. The forwarded port to the Nifi UI.
@@ -191,10 +194,10 @@ if [ ! -z "${TRUSTSTORE}" -a ! -f "${TRUSTSTORE}" ]; then
 fi
 
 # If both --keystore and --new-keystore is specified, ignore --new-keystore
-if [ ! -z "${KEYSTORE}" -o ! -z "${NEW_KEYSTORE}" ]; then
+if [ ! -z "${KEYSTORE}" -a ! -z "${NEW_KEYSTORE}" ]; then
     unset NEW_KEYSTORE
 fi
-if [ ! -z "${TRUSTSTORE}" -o ! -z "${NEW_TRUSTSTORE}" ]; then
+if [ ! -z "${TRUSTSTORE}" -a ! -z "${NEW_TRUSTSTORE}" ]; then
     unset NEW_TRUSTSTORE
 fi
 
@@ -292,7 +295,7 @@ LDAP_ORGANISATION=${ORGANIZATION}
 LDAP_DOMAIN=${DOMAIN}
 EOF
 
-echo << EOF
+cat << EOF
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             Setup is done!
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
