@@ -1,40 +1,43 @@
 #!/bin/ash -e
 
-KEYSTORE_PSWD=$1
-TRUSTSTORE_PSWD=$2
+SERVER_DNAME=$1
+KEYSTORE_PSWD=$2
+TRUSTSTORE_PSWD=$3
+GENERATE_EXT_TRUSTSTORE=$4
+EXT_TRUSTSTORE_PSWD=$5
 
-# When keystore.jks does not exist
+echo "--------- Processing keystore/truststore ---------"
+
 if [ ! -f ./secrets/keystore.jks ]; then
     echo "keystore.jks does not exist. Generating new keystore."
-    read -p "Please enter the subject of cert. It typically has the form \"CN=[hostname],OU=nifi\":" SERVER_CERT_SUBJECT
-    echo "---------------------------------------------"
-    echo "Generating keystore with certificate: ${SERVER_CERT_SUBJECT}"
-    echo "---------------------------------------------"
-    keytool -genkey -keyalg RSA -alias nifi -keystore keystore.jks -keypass "${KEYSTORE_PSWD}" -storepass "${KEYSTORE_PSWD}" -validity 365 -keysize 4096 -dname "${SERVER_CERT_SUBJECT}"
+    echo "*** Generating keystore with certificate \"${SERVER_DNAME}\" ***"
+    keytool -genkey -keyalg RSA -alias nifi -keystore keystore.jks -keypass "${KEYSTORE_PSWD}" -storepass "${KEYSTORE_PSWD}" -validity 365 -keysize 4096 -dname "${SERVER_DNAME}"
+    chmod 640 keystore.jks
+    echo "*** Keystore generated ***"
 
     # Generate a truststore for this keystore, so that it could be easily used on other Nifi instances to communicate with this Nifi instance securely
-    rm -f external.der
+    rm -f nifi.der
     rm -f external_truststore.jks
+    keytool -export -keystore keystore.jks -alias nifi -file nifi.der -storepass "${KEYSTORE_PSWD}"
 
-    keytool -export -keystore keystore.jks -alias nifi -file external.der -storepass "${KEYSTORE_PSWD}"
+    if [ "${GENERATE_EXT_TRUSTSTORE}" == "YES" ]; then
+        echo "*** Generating EXTERNAL truststore ***"
+        keytool -import -file nifi.der -alias nifi -keystore external_truststore.jks -storepass "${EXT_TRUSTSTORE_PSWD}" -noprompt
+        chmod 640 external_truststore.jks
+        echo "*** Dummy truststore generated ***"
+    fi
 
     # If no truststore.jks detected, generate a dummy one
     if [ ! -f ./secrets/truststore.jks ]; then
-        keytool -import -file external.der -alias nifi -keystore truststore.jks -storepass "${TRUSTSTORE_PSWD}" -noprompt
+        echo "*** Generating dummy truststore ***"
+        keytool -import -file nifi.der -alias nifi -keystore truststore.jks -storepass "${TRUSTSTORE_PSWD}" -noprompt
+        chmod 640 truststore.jks
+        echo "*** Dummy truststore generated ***"
     fi
 
-    echo -n "Generating a truststore for EXTERNAL usage from this keystore. Please provide password for this truststore: "
-    read -s EXTERNAL_TRUSTSTORE_PSWD
-    echo " "
-    keytool -import -file external.der -alias nifi -keystore external_truststore.jks -storepass "${EXTERNAL_TRUSTSTORE_PSWD}" -noprompt
-
     # Clean up
-    rm -f external.der
-    chmod 640 keystore.jks
-    chmod 640 external_truststore.jks
-    echo "---------------------------------------------"
-    echo "Keystore generation finished!"
-    echo "---------------------------------------------"
+    rm -f nifi.der
+    echo "*** Keystore generation finished! ***"
 fi
 
 # When keystore.jks exists, but no truststore.jks exists
@@ -47,4 +50,8 @@ if [ ! -f ./truststore.jks ]; then
     rm -f nifi.der
     chmod 640 truststore.jks
 fi
+
+echo "--------- Processing finished ---------"
+
+
 
