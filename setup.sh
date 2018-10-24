@@ -109,28 +109,28 @@ print_help(){
 
     USAGE: ./setup.sh [OPTIONS] [ARGUMENTS]
 
-    Example: ./setup.sh -n host-01 -p 8443 --nifi-user admin --nifi-pass fraunhofer -s "CN=host-01,OU=nifi" --new-keystore --new-truststore
+    EXAMPLE: ./setup.sh -n host-01 -p 8443 --nifi-user admin --nifi-pass fraunhofer -s "CN=host-01,OU=nifi" --new-keystore --new-truststore
 
     OPTIONS:
 
 EOF
     cat << EOF | column -s"|" -t
-    -h, --help:|Show the help message.
-    -n, --hostname HOSTNAME:|Required. The hostname of machine hosting the Nifi container.
-    -p, --port PORT:|Required. The forwarded port to the Nifi UI.
-    --nifi-user USERNAME:|Required. The user name to log into Nifi UI.
-    --nifi-pass PASSWORD:|Required. The password to log into Nifi UI.
-    -d, --domain DOMAIN:|Optional. The domain to be used in LDAP server. This will be turned into the base Distinctive Name, e.g. "example.com" => "dc=example,dc=com" (Default "example.com").
-    -O, --organization ORG:|Optional. The organization name used in LDAP server (Default: "Example Inc.").
-    --keystore FILE:|Optional. The keystore file to be used in Nifi. If this argument is set, --keypass must also be set.
-    --new-keystore:|Optional. Create new keystore. Either this flag or --keystore must be specified.
-    --keypass PASSWORD:|Optional. The password to specified keystore or the newly generated one. Must be specified when --keystore is set and must match the password of the specified keystore file. If not specified, a random one will be used.
-    --truststore FILE:|Optional. The truststore file to be used in Nifi. If this argument is set, --trustpass must also be set.
-    --new-truststore:|Optional. Create new truststore. Either this flag or --truststore must be specified.
-    --trustpass PASSWORD:|Optional. The password to the specified truststore or the newly generated one. Must be specified when --truststore is set and must match the password of the specified keystore file. If not specified, a random one will be used.
-    --ext-trust:|Optional. Whether to generate a truststore from the keystore, which is intended to be used by another Nifi instance to communicate securely with this one.
-    --ext-pass PASSWORD:|Optional. The password to the external truststore. If not specified, a random one is used.
-    -s, --server-dn DN:|Optional. The Distinguish Name of the server certificate in keystore (Default: CN=[HOSTNAME],OU=nifi).
+        -h, --help:|Show the help message.
+        -n, --hostname HOSTNAME:|Required. The hostname of machine hosting the Nifi container.
+        -p, --port PORT:|Required. The forwarded port to the Nifi UI.
+        --nifi-user USERNAME:|Required. The user name to log into Nifi UI.
+        --nifi-pass PASSWORD:|Required. The password to log into Nifi UI.
+        -d, --domain DOMAIN:|Optional. The domain to be used in LDAP server. This will be turned into the base Distinctive Name, e.g. "example.com" => "dc=example,dc=com" (Default "example.com").
+        -O, --organization ORG:|Optional. The organization name used in LDAP server (Default: "Example Inc.").
+        --keystore FILE:|Optional. The keystore file to be used in Nifi. If this argument is set, --keypass must also be set.
+        --new-keystore:|Optional. Create new keystore. Either this flag or --keystore must be specified.
+        --keypass PASSWORD:|Optional. The password to specified keystore or the newly generated one. Must be specified when --keystore is set and must match the password of the specified keystore file. If not specified, a random one will be used.
+        --truststore FILE:|Optional. The truststore file to be used in Nifi. If this argument is set, --trustpass must also be set.
+        --new-truststore:|Optional. Create new truststore. Either this flag or --truststore must be specified.
+        --trustpass PASSWORD:|Optional. The password to the specified truststore or the newly generated one. Must be specified when --truststore is set and must match the password of the specified keystore file. If not specified, a random one will be used.
+        --ext-trust:|Optional. Whether to generate a truststore from the keystore, which is intended to be used by another Nifi instance to communicate securely with this one.
+        --ext-pass PASSWORD:|Optional. The password to the external truststore. If not specified, a random one is used.
+        -s, --server-dn DN:|Optional. The Distinguish Name of the server certificate in keystore (Default: CN=[HOSTNAME],OU=nifi).
 EOF
 
 }

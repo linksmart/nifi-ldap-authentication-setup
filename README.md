@@ -1,6 +1,6 @@
-# Nifi LDAP Authentication Setup
+# Nifi LDAP Authentication Docker Setup
 
-This repository contains setup configuration for running a secure Nifi instance which authenticates users using LDAP.
+This repository contains setup configuration for running a secure Nifi docker container which authenticates users using LDAP.
 
 ## Quick Start
 Run the setup script to generate necessary configurations:
@@ -11,26 +11,26 @@ Run the setup script to generate necessary configurations:
 
     USAGE: ./setup.sh [OPTIONS] [ARGUMENTS]
 
-    Example: ./setup.sh -n host-01 -p 8443 --nifi-user admin --nifi-pass fraunhofer -s "CN=host-01,OU=nifi" --new-keystore --new-truststore
+    EXAMPLE: ./setup.sh -n host-01 -p 8443 --nifi-user admin --nifi-pass fraunhofer -s "CN=host-01,OU=nifi" --new-keystore --new-truststore
 
     OPTIONS:
 
-    -h, --help:               Show the help message.
-    -n, --hostname HOSTNAME:  Required. The hostname of machine hosting the Nifi container.
-    -p, --port PORT:          Required. The forwarded port to the Nifi UI.
-    --nifi-user USERNAME:     Required. The user name to log into Nifi UI.
-    --nifi-pass PASSWORD:     Required. The password to log into Nifi UI.
-    -d, --domain DOMAIN:      Optional. The domain to be used in LDAP server. This will be turned into the base Distinctive Name, e.g. "example.com" => "dc=example,dc=com" (Default "example.com").
-    -O, --organization ORG:   Optional. The organization name used in LDAP server (Default: "Example Inc.").
-    --keystore FILE:          Optional. The keystore file to be used in Nifi. If this argument is set, --keypass must also be set.
-    --new-keystore:           Optional. Create new keystore. Either this flag or --keystore must be specified.
-    --keypass PASSWORD:       Optional. The password to specified keystore or the newly generated one. Must be specified when --keystore is set and must match the password of the specified keystore file. If not specified, a random one will be used.
-    --truststore FILE:        Optional. The truststore file to be used in Nifi. If this argument is set, --trustpass must also be set.
-    --new-truststore:         Optional. Create new truststore. Either this flag or --truststore must be specified.
-    --trustpass PASSWORD:     Optional. The password to the specified truststore or the newly generated one. Must be specified when --truststore is set and must match the password of the specified keystore file. If not specified, a random one will be used.
-    --ext-trust:              Optional. Whether to generate a truststore from the keystore, which is intended to be used by another Nifi instance to communicate securely with this one. Only effective when --new-keystore is specified.
-    --ext-pass PASSWORD:      Optional. The password to the external truststore. If not specified, a random one is used.
-    -s, --server-dn DN:       Optional. The Distinguish Name of the server certificate in keystore (Default: CN=[HOSTNAME],OU=nifi).
+        -h, --help:               Show the help message.
+        -n, --hostname HOSTNAME:  Required. The hostname of machine hosting the Nifi container.
+        -p, --port PORT:          Required. The forwarded port to the Nifi UI.
+        --nifi-user USERNAME:     Required. The user name to log into Nifi UI.
+        --nifi-pass PASSWORD:     Required. The password to log into Nifi UI.
+        -d, --domain DOMAIN:      Optional. The domain to be used in LDAP server. This will be turned into the base Distinctive Name, e.g. "example.com" => "dc=example,dc=com" (Default "example.com").
+        -O, --organization ORG:   Optional. The organization name used in LDAP server (Default: "Example Inc.").
+        --keystore FILE:          Optional. The keystore file to be used in Nifi. If this argument is set, --keypass must also be set.
+        --new-keystore:           Optional. Create new keystore. Either this flag or --keystore must be specified.
+        --keypass PASSWORD:       Optional. The password to specified keystore or the newly generated one. Must be specified when --keystore is set and must match the password of the specified keystore file. If not specified, a random one will be used.
+        --truststore FILE:        Optional. The truststore file to be used in Nifi. If this argument is set, --trustpass must also be set.
+        --new-truststore:         Optional. Create new truststore. Either this flag or --truststore must be specified.
+        --trustpass PASSWORD:     Optional. The password to the specified truststore or the newly generated one. Must be specified when --truststore is set and must match the password of the specified keystore file. If not specified, a random one will be used.
+        --ext-trust:              Optional. Whether to generate a truststore from the keystore, which is intended to be used by another Nifi instance to communicate securely with this one. Only effective when --new-keystore is specified.
+        --ext-pass PASSWORD:      Optional. The password to the external truststore. If not specified, a random one is used.
+        -s, --server-dn DN:       Optional. The Distinguish Name of the server certificate in keystore (Default: CN=[HOSTNAME],OU=nifi).
 ```
 
 The script will will do the following for you:  
@@ -71,16 +71,7 @@ After logging in, you'll find most things greyed out. You need to change the pol
 2. If you have configurations files to add to the Nifi instance, simply put them into `./nifi/conf`. Typically, you can put in the following files:
     - `flow.xml.gz`: this file contains the current processor setup on the Nifi canvas
     - `./templates/*.xml`: template files   
-    
-#### Security
-1. If you already have a private key and a certificate (or a chain of certificates), put them in `./nifi/secrets`, run the following command:
-    ```bash
-    docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
-        -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
-        /usr/src/secrets/import-certificates.sh \
-        [key file name] [cert file name] [store password]
-    ```
-    This will generate the `keystore.jks` from your certificate and private key.
+
 ## Notes
 Here is something I learned, which is not clearly documented in official documents:  
 
@@ -93,6 +84,6 @@ Here is something I learned, which is not clearly documented in official documen
     - `LDAP_MANAGER_DN`: the DN of the default admin, e.g. `cn=admin,dc=fraunhofer,dc=de`
     - `LDAP_MANAGER_PASSWORD`: the password for this admin, which must be the same as `LDAP_ADMIN_PASSWORD` above. 
 
-    It is important to distinguish this account from the Nifi admin account mentioned below.  This account is only used to access LDAP server for user credential retrieval. The Nifi admin account is used to access the Nifi instance.
+    It is important to distinguish this account from the Nifi admin account mentioned below. This account is only used to access LDAP server for user credential retrieval. The Nifi admin account is used to access the Nifi instance.
 
 3. The file `ldap/secrets/users.ldif` specifies the Nifi admin account, e.g. `uid=admin,ou=people,dc=fraunhofer,dc=de`. This DN needs to be added to Nifi as the initial admin identity by setting the environment variable `INITIAL_ADMIN_IDENTITY` to this DN for the Nifi container.
