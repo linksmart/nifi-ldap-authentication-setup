@@ -4,13 +4,39 @@ This repository contains setup configuration for running a secure Nifi instance 
 
 ## Quick Start
 Run the setup script to generate necessary configurations:
-```bash
-./setup.sh
+```
+./setup.sh -n host-01 -p 8443 --nifi-user admin --nifi-pass fraunhofer -s "CN=host-01,OU=nifi" --new-keystore --new-truststore
+
+    This script generate appropriate configuration and keystore/truststore for a secure Nifi instance.
+
+    USAGE: ./setup.sh [OPTIONS] [ARGUMENTS]
+
+    Example: ./setup.sh -n host-01 -p 8443 --nifi-user admin --nifi-pass fraunhofer -s "CN=host-01,OU=nifi" --new-keystore --new-truststore
+
+    OPTIONS:
+
+    -h, --help:               Show the help message.
+    -n, --hostname HOSTNAME:  Required. The hostname of machine hosting the Nifi container.
+    -p, --port PORT:          Required. The forwarded port to the Nifi UI.
+    --nifi-user USERNAME:     Required. The user name to log into Nifi UI.
+    --nifi-pass PASSWORD:     Required. The password to log into Nifi UI.
+    -d, --domain DOMAIN:      Optional. The domain to be used in LDAP server. This will be turned into the base Distinctive Name, e.g. "example.com" => "dc=example,dc=com" (Default "example.com").
+    -O, --organization ORG:   Optional. The organization name used in LDAP server (Default: "Example Inc.").
+    --keystore FILE:          Optional. The keystore file to be used in Nifi. If this argument is set, --keypass must also be set.
+    --new-keystore:           Optional. Create new keystore. Either this flag or --keystore must be specified.
+    --keypass PASSWORD:       Optional. The password to specified keystore or the newly generated one. Must be specified when --keystore is set and must match the password of the specified keystore file. If not specified, a random one will be used.
+    --truststore FILE:        Optional. The truststore file to be used in Nifi. If this argument is set, --trustpass must also be set.
+    --new-truststore:         Optional. Create new truststore. Either this flag or --truststore must be specified.
+    --trustpass PASSWORD:     Optional. The password to the specified truststore or the newly generated one. Must be specified when --truststore is set and must match the password of the specified keystore file. If not specified, a random one will be used.
+    --ext-trust:              Optional. Whether to generate a truststore from the keystore, which is intended to be used by another Nifi instance to communicate securely with this one. Only effective when --new-keystore is specified.
+    --ext-pass PASSWORD:      Optional. The password to the external truststore. If not specified, a random one is used.
+    -s, --server-dn DN:       Optional. The Distinguish Name of the server certificate in keystore (Default: CN=[HOSTNAME],OU=nifi).
 ```
 
 The script will will do the following for you:  
-- If no `keystore.jks` exists inside `./nifi/secrets`, it will prompt you to generate one with self-signed certificate;
-- If no `truststore.jks` exists inside `./nifi/secrets`, it will prompt you to generate a dummy truststore;
+- Generate `keystore.jks` and `truststore.jks` as required;
+- Generate a `external-truststore.jks` matching the `keystore.jks` as required, which is intended to be used in another Nifi instance to communicate with this one securely.
+- If you ask it to generate a new `truststore.jks`, it will also generate a matching `PKCS12` file, which needs to be imported into browser to visit the Nifi UI;
 - It will generate a `users.ldif` file inside `./ldap/secrets`, which provides the initial Nifi admin identity to the LDAP server;
 - It will generate a `.env` file in repository root directory with all properly set environment variables. It will be used by docker-compose.
 
@@ -47,13 +73,7 @@ After logging in, you'll find most things greyed out. You need to change the pol
     - `./templates/*.xml`: template files   
     
 #### Security
-1. You can provide your own keystore and truststore. Just name them `keystore.jks` and `truststore.jks` respectively and put them into `./nifi/screts`. Then follow the quick start instruction.
-
-
-2. If a new `keystore.jks` is generated, a matching truststore `external_truststore.jks` would also be generated. This truststore is intended to be used in another Nifi instance to communicate securely with the one you are launching.  
-
-
-3. If you already have a private key and a certificate (or a chain of certificates), put them in `./nifi/secrets`, run the following command:
+1. If you already have a private key and a certificate (or a chain of certificates), put them in `./nifi/secrets`, run the following command:
     ```bash
     docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
         -w /usr/src/secrets --user ${UID} openjdk:8-alpine \
