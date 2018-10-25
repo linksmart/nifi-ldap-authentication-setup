@@ -1,5 +1,9 @@
-FROM osixia/openldap:latest
+ARG LDAP_VERSION=latest
+
+FROM osixia/openldap:${LDAP_VERSION}
 LABEL maintainer="Junhong Liang"
 
-ADD secrets/*.ldif /container/service/slapd/assets/config/bootstrap/ldif/custom/
+ARG SECRET_DIR="./secrets"
+
+ADD ${SECRET_DIR}/*.ldif /container/service/slapd/assets/config/bootstrap/ldif/custom/
 
