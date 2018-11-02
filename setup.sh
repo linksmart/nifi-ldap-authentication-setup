@@ -8,13 +8,12 @@ cat << EOF
      -------------------------------
 EOF
 
-POSITIONAL=()
 while [[ $# -gt 0 ]]; do
 key="$1"
     case $key in
         -h|--help)
         HELP=YES
-        shift # past argument
+        break
         ;;
         -n|--hostname)
         NIFI_HOST="$2"
@@ -93,13 +92,16 @@ key="$1"
         shift # past argument
         shift # past value
         ;;
-        *)    # unknown option
-        POSITIONAL+=("$1") # save it in an array for later
+        --ldap-provider)
+        USE_LDAP_PROVIDER=YES
         shift # past argument
+        ;;
+        *)    # unknown option
+        UNKNOWN_FLAG="$1"
+        break
         ;;
     esac
 done
-set -- "${POSITIONAL[@]}" # restore positional parameters
 
 print_help(){
 
@@ -131,6 +133,7 @@ EOF
         --ext-trust:|Optional. Whether to generate a truststore from the keystore, which is intended to be used by another Nifi instance to communicate securely with this one.
         --ext-pass PASSWORD:|Optional. The password to the external truststore. If not specified, a random one is used.
         -s, --server-dn DN:|Optional. The Distinguish Name of the server certificate in keystore (Default: CN=[HOSTNAME],OU=nifi).
+        --ldap-provider:|Optional. If this flag is present, the LdapUserGroupProvider will be used, which searches for users having the same base DN as the Nifi admin user.
 EOF
 
 }
@@ -139,10 +142,21 @@ gen_pass(){
     echo $(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
 }
 
+gen_file(){
+    TEMPLATE="$(cat $1)"
+    TEMPLATE=$(sed 's/\([^\\]\)"/\1\\"/g; s/^"/\\"/g' <<< "$TEMPLATE")
+    eval "echo \"${TEMPLATE}\" > $2"
+}
+
 # Check the correctness of arguments
 if [ ! -z "${HELP}" ]; then
     print_help
     exit 0
+fi
+if [ ! -z "${UNKNOWN_FLAG}" ]; then
+    echo "[ERROR] Unknown flag ${UNKOWN_FLAG} "
+    print_help
+    exit 1
 fi
 if [ -z "${NIFI_HOST}" ]; then
     echo "[ERROR] \"-n | --hostname\" is not specified "
@@ -218,6 +232,7 @@ fi
 # Remove old generated files
 rm -f ./ldap/secrets/users.ldif
 rm -f ./.env
+rm -f ./nifi/conf/authorizers.xml
 
 # Give default values
 : ${CLIENT_DN:="CN=user, OU=nifi"}
@@ -257,43 +272,15 @@ docker run -it --rm -v "$PWD/nifi/secrets":/usr/src/secrets \
 
 # Generate bootstrap ldif file, which contains the initial Nifi admin credential
 # This file will be read in by the OpenLDAP server during start up, creating a single user entry in the LDAP database
-cat  << EOF > ./ldap/secrets/users.ldif
-version: 1
-
-# entry for the user container
-dn: ${OU_DN}
-objectclass:top
-objectclass:organizationalUnit
-ou: ${OU}
-
-# entry for admin
-dn: ${NIFI_ADMIN_DN}
-objectclass:top
-objectclass:person
-objectclass:organizationalPerson
-objectclass:inetOrgPerson
-cn: ${NIFI_ADMIN_UID}
-sn: ${NIFI_ADMIN_UID}
-uid: ${NIFI_ADMIN_UID}
-userPassword:${NIFI_ADMIN_PASS}
-
-EOF
+gen_file "./templates/users.ldif" "./ldap/secrets/users.ldif"
 
 # Generate .env file for docker-compose
-cat  << EOF > ./.env
-NIFI_INITIAL_ADMIN_IDENTITY=${NIFI_INITIAL_ADMIN_IDENTITY}
-NIFI_LDAP_MANAGER_DN=${NIFI_LDAP_MANAGER_DN}
-NIFI_LDAP_MANAGER_PASSWORD=${NIFI_LDAP_MANAGER_PASSWORD}
-NIFI_LDAP_USER_SEARCH_BASE=${NIFI_LDAP_USER_SEARCH_BASE}
-NIFI_KEYSTORE_PASS=${KEYSTORE_PASS}
-NIFI_TRUSTSTORE_PASS=${TRUSTSTORE_PASS}
-NIFI_HOST=${NIFI_HOST}
-NIFI_PORT=${NIFI_PORT}
+gen_file "./templates/.env" "./.env"
 
-LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASS}
-LDAP_ORGANISATION=${ORGANIZATION}
-LDAP_DOMAIN=${DOMAIN}
-EOF
+# Generate authorizers.xml, if necessary
+if [ ! -z ${USE_LDAP_PROVIDER} ]; then
+    gen_file "./templates/authorizers.xml" "./nifi/conf/authorizers.xml"
+fi
 
 cat << EOF
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

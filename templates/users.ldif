@@ -1,0 +1,40 @@
+version: 1
+
+# entry for the user container
+dn: ${OU_DN}
+objectclass:top
+objectclass:organizationalUnit
+ou: ${OU}
+
+# entry for admin
+dn: ${NIFI_ADMIN_DN}
+objectclass:top
+objectclass:person
+objectclass:organizationalPerson
+objectclass:inetOrgPerson
+cn: ${NIFI_ADMIN_UID}
+sn: ${NIFI_ADMIN_UID}
+uid: ${NIFI_ADMIN_UID}
+userPassword:${NIFI_ADMIN_PASS}
+
+# example user
+dn: uid=guest1,${OU_DN}
+objectclass:top
+objectclass:person
+objectclass:organizationalPerson
+objectclass:inetOrgPerson
+cn: guest1
+sn: guest1
+uid: guest1
+userPassword:guest1
+
+# example user
+dn: uid=guest2,${OU_DN}
+objectclass:top
+objectclass:person
+objectclass:organizationalPerson
+objectclass:inetOrgPerson
+cn: guest2
+sn: guest2
+uid: guest2
+userPassword:guest2

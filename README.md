@@ -31,14 +31,16 @@ Run the setup script to generate necessary configurations:
         --ext-trust:              Optional. Whether to generate a truststore from the keystore, which is intended to be used by another Nifi instance to communicate securely with this one. Only effective when --new-keystore is specified.
         --ext-pass PASSWORD:      Optional. The password to the external truststore. If not specified, a random one is used.
         -s, --server-dn DN:       Optional. The Distinguish Name of the server certificate in keystore (Default: CN=[HOSTNAME],OU=nifi).
+        --ldap-provider:          Optional. If this flag is present, the LdapUserGroupProvider will be used, which searches for users having the same base DN as the Nifi admin user.
+
 ```
 
 The script will will do the following for you:  
 - Generate `keystore.jks` and `truststore.jks` as required;
 - Generate a `external-truststore.jks` matching the `keystore.jks` as required, which is intended to be used in another Nifi instance to communicate with this one securely.
-- If you ask it to generate a new `truststore.jks`, it will also generate a matching `PKCS12` file, which needs to be imported into browser to visit the Nifi UI;
 - It will generate a `users.ldif` file inside `./ldap/secrets`, which provides the initial Nifi admin identity to the LDAP server;
 - It will generate a `.env` file in repository root directory with all properly set environment variables. It will be used by docker-compose.
+- If required, it will generate a `authorizers.xml` file under `./nifi/conf`, which contains configuration for using `LdapUserGroupProvider`
 
 After it finishes, you can need to build the images:
 ```bash
